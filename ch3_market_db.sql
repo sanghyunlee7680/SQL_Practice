@@ -46,6 +46,156 @@ INSERT INTO buy VALUES(NULL, 'MMU', '지갑', NULL, 30, 1);
 INSERT INTO buy VALUES(NULL, 'APN', '혼공SQL', '서적', 15, 1);
 INSERT INTO buy VALUES(NULL, 'MMU', '지갑', NULL, 30, 4);
 
-SELECT * FROM member;
-SELECT * FROM buy;
+SELECT * 
+	FROM member;
+SELECT * 
+	FROM buy;
 
+select addr "주소", debut_date "데뷔일자", mem_name "멤버이름"
+	from member;
+
+select * 
+	from member
+	where mem_name = '블랙핑크';
+
+select mem_id, mem_name
+	from member
+    where height >=163;
+
+select mem_name, height, mem_number
+	from member
+    where height >=165 and mem_number>=6;
+    
+select mem_name, height, mem_number
+	from member
+    where height >=163 or mem_number<6;
+    
+-- 범위 정하기 between --
+ select mem_name, height
+	from member
+    where height between 163 and 165;
+-- 같은 표현 --
+select mem_name, height
+	from member
+	where height >=163 and height<=165;
+-- in 포함 --
+select mem_name, addr
+	from member
+    where addr in('경기','전남','경남');
+-- 같은 표현 --
+select mem_name, addr
+	from member
+	where addr='경기' or addr='전남' or addr='경남';
+
+select * 
+	from member
+    where mem_name like '%핑%';
+
+select * 
+	from member
+    where mem_name like '__핑_';
+
+-- order by 정렬 기본값 asc : 오름차순 
+select mem_id, mem_name, debut_date
+	from member
+    order by debut_date;
+-- 내림차순 order by는 결과를 정렬한다,
+-- 따라서 where절이 order by 뒤에 올 수 없다.
+select mem_id, mem_name, debut_date
+	from member
+	order by debut_date desc;
+-- order by의 결과가 동일할 때 하나의 조건을 더 추가해서 정렬한다.
+-- 동일할 때 적용
+select mem_id, mem_name, height, debut_date
+	from member
+    where height >=164
+    order by height desc, debut_date asc;
+
+-- limit 출력 줄 제한 결고값 정렬 후 사용 
+select mem_name, debut_date
+	from member
+    order by debut_date
+    limit 3;
+
+select mem_name, height 
+	from member;
+-- distinct 중복된 데이터를 1개만 출력
+select addr from member;
+select distinct addr from member;
+    
+select mem_id, amount 
+	from buy
+    order by mem_id;
+-- groub by 함수사용가능 
+select mem_id, sum(amount) 'amount_sum'
+	from buy
+	group by mem_id;    
+	
+select mem_id, sum(price*amount) 'all_price'
+	from buy
+	group by mem_id;
+    
+select mem_id, AVG(amount) '평균 구매 개수'
+	from buy
+    group by mem_id;
+
+-- 멤버 테이블 전체 줄 카운팅
+select count(*)
+	from member;
+    
+select count(phone1) '연락처가 있는 회원 수'
+	from member;
+    
+select mem_id, sum(price*amount) '총 구매 금액'
+	from buy
+	group by mem_id
+    having sum(price*amount)>1000;
+    
+select mem_id, sum(price*amount) '총 구매 금액'
+	from buy
+    group by mem_id
+    having sum(price*amount)>1000
+    order by sum(price*amount) desc;
+    
+    
+-- insert
+use market_db;
+create table hongong1
+(
+	toy_id int,
+	toy_name varchar(4),
+    age int
+)default charset=utf8;
+-- 컬럼 생략하고 정의한 순으로 데이터 삽입하기
+insert into hongong1 values (1, '우디', 25);
+-- 지정한 컬럼에 데이터 삽입하기
+insert into hongong1(toy_id, toy_name) values (2, '버즈');
+-- 컬럼 순서 변경해서 데이터 삽입하기
+insert into hongong1(toy_name, age, toy_id) values ('제시', 20, 3);
+
+create table hongong2
+(
+	toy_id int auto_increment primary key,
+    toy_name varchar(4),
+    age int
+)default charset=utf8;
+
+insert into hongong2 values(null,'보핍',25);
+insert into hongong2 values(null,'슬링키',22);
+insert into hongong2 values(null,'렉스',21);
+select * from hongong2;
+
+select last_insert_id();
+
+show global variables;
+
+create table city_population
+(
+	city_name varchar(35),
+    population int
+)default charset=utf8;
+insert into city_population values ('Seoul',9981619);
+select * from city_population;
+update city_population
+	set city_name='서울'
+    where city_name='Seoul';
