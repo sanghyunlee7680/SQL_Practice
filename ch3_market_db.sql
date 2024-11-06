@@ -46,156 +46,202 @@ INSERT INTO buy VALUES(NULL, 'MMU', '지갑', NULL, 30, 1);
 INSERT INTO buy VALUES(NULL, 'APN', '혼공SQL', '서적', 15, 1);
 INSERT INTO buy VALUES(NULL, 'MMU', '지갑', NULL, 30, 4);
 
-SELECT * 
-	FROM member;
-SELECT * 
-	FROM buy;
+SELECT * FROM member;
+SELECT * FROM buy;
 
-select addr "주소", debut_date "데뷔일자", mem_name "멤버이름"
-	from member;
+-- 변수 사용
+set @myvar1 = 5;
+set @myvar2 = 4.25;
 
-select * 
-	from member
-	where mem_name = '블랙핑크';
+select @myvar1;
+select (@myvar1  + @myvar2)  '변수1+변수2' ;
 
-select mem_id, mem_name
-	from member
-    where height >=163;
+set @txt ='기수 이름==> ';
+set @height = 166;
+select @txt, mem_name from member where height > @height; 
 
-select mem_name, height, mem_number
-	from member
-    where height >=165 and mem_number>=6;
+-- prepare execute
+set @count=3;
+prepare mySQL from 'select mem_name, height from member order by height limit ?';
+execute mySQL using @count;
+
+-- 데이터 형 변환
+select cast(avg(price) as signed) '평균 가격' 
+	from buy;
+-- 또는
+select convert(avg(price), signed) '평균 가격'
+	from buy;
     
-select mem_name, height, mem_number
-	from member
-    where height >=163 or mem_number<6;
+select cast('2022$12$12' as date);
+select cast('2022/12/12' as date);
+select convert('2022%12%12', date);
+select convert('2022@12@12', date);
+
+select num, concat(cast(price as char), 'X', cast(amount as char), '=') '가격 = 수량', price*amount '구매액'
+	from buy;
     
--- 범위 정하기 between --
- select mem_name, height
-	from member
-    where height between 163 and 165;
--- 같은 표현 --
-select mem_name, height
-	from member
-	where height >=163 and height<=165;
--- in 포함 --
-select mem_name, addr
-	from member
-    where addr in('경기','전남','경남');
--- 같은 표현 --
-select mem_name, addr
-	from member
-	where addr='경기' or addr='전남' or addr='경남';
+-- 자동 형변환 concat() 문자를 합쳐주는 기능
+select 100 + '200';
+select concat(100,200);
+select concat('100','200');
+select '100' + '200';
 
-select * 
-	from member
-    where mem_name like '%핑%';
+-- join() 내부join
+select * from buy   -- select * from member;
+	inner join member
+	on buy.mem_id = member.mem_id;
+select * from buy;
+select * from member;
 
-select * 
-	from member
-    where mem_name like '__핑_';
-
--- order by 정렬 기본값 asc : 오름차순 
-select mem_id, mem_name, debut_date
-	from member
-    order by debut_date;
--- 내림차순 order by는 결과를 정렬한다,
--- 따라서 where절이 order by 뒤에 올 수 없다.
-select mem_id, mem_name, debut_date
-	from member
-	order by debut_date desc;
--- order by의 결과가 동일할 때 하나의 조건을 더 추가해서 정렬한다.
--- 동일할 때 적용
-select mem_id, mem_name, height, debut_date
-	from member
-    where height >=164
-    order by height desc, debut_date asc;
-
--- limit 출력 줄 제한 결고값 정렬 후 사용 
-select mem_name, debut_date
-	from member
-    order by debut_date
-    limit 3;
-
-select mem_name, height 
-	from member;
--- distinct 중복된 데이터를 1개만 출력
-select addr from member;
-select distinct addr from member;
-    
-select mem_id, amount 
+-- 내부join 간결한 표현 
+select buy.mem_id, mem_name, prod_name, addr, concat(phone1, phone2) '연락처'
 	from buy
+	inner join member
+    on buy.mem_id = member.mem_id;
+-- 또는 모든 컬럼 미리 구분해놓기
+select buy.mem_id, member.mem_name, buy.prod_name, member.addr, concat(member.phone1, member.phone2) '연락처'
+	from buy
+	inner join member
+    on buy.mem_id = member.mem_id;
+-- 내부 join 간결표현 중 테이블 별칭 붙이기 및 정렬하기
+select b.mem_id, m.mem_name, b.prod_name, m.addr, concat(m.phone1, m.phone2) '연락처'
+	from buy b
+    inner join member m
+    on b.mem_id = m.mem_id
     order by mem_id;
--- groub by 함수사용가능 
-select mem_id, sum(amount) 'amount_sum'
-	from buy
-	group by mem_id;    
-	
-select mem_id, sum(price*amount) 'all_price'
-	from buy
-	group by mem_id;
+-- 내부 join 중복된 결과 1개만 출력하기
+select distinct m.mem_id, m.mem_name, m.addr
+	from buy b
+    inner join member m
+    on b.mem_id = m.mem_id
+    order by mem_id;
+-- 외부 join     
+select m.mem_id, m.mem_name, b.prod_name, m.addr
+	from member m -- left table
+		left outer join buy b  -- right table
+		on m.mem_id = b.mem_id
+    order by m.mem_id;
     
-select mem_id, AVG(amount) '평균 구매 개수'
-	from buy
-    group by mem_id;
-
--- 멤버 테이블 전체 줄 카운팅
-select count(*)
-	from member;
+select m.mem_id, m.mem_name, b.prod_name, m.addr
+	from member m -- left table
+		right outer join buy b  -- right table
+		on m.mem_id = b.mem_id
+    order by m.mem_id;
     
-select count(phone1) '연락처가 있는 회원 수'
-	from member;
-    
-select mem_id, sum(price*amount) '총 구매 금액'
-	from buy
-	group by mem_id
-    having sum(price*amount)>1000;
-    
-select mem_id, sum(price*amount) '총 구매 금액'
-	from buy
-    group by mem_id
-    having sum(price*amount)>1000
-    order by sum(price*amount) desc;
-    
-    
--- insert
-use market_db;
-create table hongong1
-(
-	toy_id int,
-	toy_name varchar(4),
-    age int
-)default charset=utf8;
--- 컬럼 생략하고 정의한 순으로 데이터 삽입하기
-insert into hongong1 values (1, '우디', 25);
--- 지정한 컬럼에 데이터 삽입하기
-insert into hongong1(toy_id, toy_name) values (2, '버즈');
--- 컬럼 순서 변경해서 데이터 삽입하기
-insert into hongong1(toy_name, age, toy_id) values ('제시', 20, 3);
-
-create table hongong2
-(
-	toy_id int auto_increment primary key,
-    toy_name varchar(4),
-    age int
+create table emp_table
+( emp char(4),
+  manager char(4),
+  phone varchar(8)
 )default charset=utf8;
 
-insert into hongong2 values(null,'보핍',25);
-insert into hongong2 values(null,'슬링키',22);
-insert into hongong2 values(null,'렉스',21);
-select * from hongong2;
+insert into emp_table values('대표',null,'0000');
+insert into emp_table values('영업이사','대표','1111');
+insert into emp_table values('관리이사','대표','2222');
+insert into emp_table values('정보이사','대표','3333');
+insert into emp_table values('영업과장','영업이사','1111-1');
+insert into emp_table values('경리부장','관리이사','2222-1');
+insert into emp_table values('인사부장','관리이사','2222-2');
+insert into emp_table values('개발팀장','정보이사','3333-1');
+insert into emp_table values('개발주임','정보이사','3333-1-1');
 
-select last_insert_id();
+select a.emp '직원', b.emp '직속상관', b.phone '직속상관연락처'
+	from emp_table a
+		inner join emp_table b
+        on a.manager = b.emp
+	where a.emp = '경리부장';
+    
+DELIMITER $$
+create procedure ifproc3()
+BEGIN
+	-- 변수 선언
+	DECLARE debutDate DATE; -- 데뷔 일자
+    DECLARE curDate DATE; -- 현재 일자
+    DECLARE days INT; -- 활동한 일수
+    
+    -- 변수 초기화
+    SELECT debut_date INTO debutDate
+		FROM market_db.member
+        WHERE mem_id = 'APN';
+	SET curDate = CURRENT_DATE(); -- 현재 날짜, 라이브러리
+    SET days = DATEDIFF(curDate, debutDate); -- 날짜의 차이, 일 단위, 라이브러리
+    
+    -- 조건제어 if
+    IF (days / 365) >= 5 THEN
+		SELECT concat('데뷔한 지' , days , '일이 지났습니다. 핑순이들 축하합니다!');
+	ELSE
+		SELECT '데뷔한 지' + days + '일 되었습니다. 핑순이들 화이팅~';
+	END IF;
+END $$
+DELIMITER ;
 
-show global variables;
+call ifproc3();
 
-create table city_population
+select m.mem_id, m.mem_name, sum(price*amount) '총구매액',
+	case
+		when(sum(price*amount) >= 1500) then '최우수고객'
+		when(sum(price*amount) >= 1000) then '우수고객'
+		when(sum(price*amount) >= 1 ) then '일반고객'
+		else '유령고객'
+	end "회원등급"
+	from buy b
+ 		right outer join member m
+        on b.mem_id = m.mem_id
+    group by m.mem_id
+    order by sum(price*amount) DESC;
+
+drop procedure if exists whileproc;
+delimiter $$
+create procedure whileproc()
+begin
+	declare i INT; -- 1에서 100까지 증가할 변수
+    declare hap INT; -- 더한 값을 누적할 변수
+    set i = 1;
+    set hap = 0;
+    
+    while(i<=100) do
+		set hap = hap + i; -- 값 누적         
+        set i = i+1; -- i++ 
+	end while;
+		select '1부터 100까지의 합 ==>', hap;
+end $$
+delimiter ;
+call whileproc();
+
+drop procedure if exists whileproc2;
+delimiter $$
+create procedure whileproc2()
+begin
+	declare i INT;
+    declare hap INT;
+    set i = 1;
+    set hap = 0;
+    
+    mywhile:
+    while(i<=100) do
+		if(i%4=0) then
+			set i = i+1;
+            iterate mywhile;
+		end if;
+        set hap = hap + i;
+        if (hap>1000) then
+			leave mywhile;
+		end if;
+        set i = i+1;
+    end while;
+    select '1부터 100까지의 합(4의 배수 제왜ㅣ), 1000 넘으면 종료 ==>', hap;
+end $$
+delimiter ;
+call whileproc2();
+
+drop table if exists gate_table;
+create table gate_table
 (
-	city_name varchar(35),
-    population int
+	id int auto_increment primary key,
+    entry_time datetime
 )default charset=utf8;
-insert into city_population values ('Seoul',9981619);
-select * from city_population;
-update city_population
-	set city_name='서울'
-    where city_name='Seoul';
+
+set @curdate = current_date();
+
+prepare myQuery from 'insert into gate_table values(null,?)';
+execute myQuery using @curdate;
+deallocate prepare myQuery; 
