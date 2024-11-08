@@ -197,7 +197,7 @@ insert into member values('OMY', '오마이걸', 167, '010');
 insert into member values('GID', '여자아이들', 169, '033');
 select * from member;
 
--- 기본값 정의 
+-- 기본값 정의 /	
 drop table if exists member;
 create table member
 (
@@ -219,5 +219,5 @@ alter table member
 	alter column phone1 set default '02';
 insert into member values('RED', '레드벨벳', 161, '054');
 insert into member values('SPC', '우주소녀', default, default);
-insert into member values('BLK', '블랙핑크');
+insert into member (mem_id, mem_name) values('BLK', '블랙핑크');
 select * from member;
